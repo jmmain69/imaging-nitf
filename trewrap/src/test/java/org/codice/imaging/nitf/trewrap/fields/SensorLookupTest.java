@@ -20,6 +20,8 @@ import org.junit.Before;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import org.junit.Test;
+import org.omg.CORBA.portable.InputStream;
+
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
@@ -37,15 +39,19 @@ public class SensorLookupTest {
     @Test
     public void checkBadResourcePath() {
         assertThat(LOGGER.getLoggingEvents().isEmpty(), is(true));
-        SensorLookup lookup = new SensorLookup(SensorLookup.class.getResourceAsStream("/bad path"));
+        InputStream stream = SensorLookup.class.getResourceAsStream("/bad path");
+        SensorLookup lookup = new SensorLookup(stream);
         assertThat(LOGGER.getLoggingEvents(), is(Arrays.asList(LoggingEvent.warn("Problem parsing XML for null:null. javax.xml.stream.XMLStreamException: java.net.MalformedURLException"))));
+        stream.close();
     }
 
     @Test
     public void checkLookupJSTARS() {
-        SensorLookup lookup = new SensorLookup(SensorLookup.class.getResourceAsStream("/ACFTB_SCENE_SOURCE_sensor.xml"));
+        InputStream stream = SensorLookup.class.getResourceAsStream("/ACFTB_SCENE_SOURCE_sensor.xml");
+        SensorLookup lookup = new SensorLookup(stream);
         assertEquals("Manual", lookup.lookupDescription("JSE8CA", "1"));
         assertEquals("Manual", lookup.lookupDescription("JSE8CA", "1", "Pre-planned"));
+        stream.close();
     }
 
     @Before

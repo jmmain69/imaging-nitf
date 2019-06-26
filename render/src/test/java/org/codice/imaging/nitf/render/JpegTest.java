@@ -67,6 +67,7 @@ public class JpegTest {
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D targetGraphic = imgAGRB.createGraphics();
         renderer.render(mockImageSegment, targetGraphic);
+        fis.close();
     }
     
     @Test
@@ -94,6 +95,7 @@ public class JpegTest {
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D targetGraphic = imgAGRB.createGraphics();
         renderer.render(mockImageSegment, targetGraphic);
+        fis.close();
     }
 
 }

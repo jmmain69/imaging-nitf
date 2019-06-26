@@ -144,5 +144,6 @@ public class BasicWriterTest extends AbstractWriterTest {
         assertEquals(0, LOGGER.getLoggingEvents().size());
         writer.write();
         assertThat(LOGGER.getLoggingEvents(), is(Arrays.asList(LoggingEvent.error("Could not write", "Cannot generate string target identifier with null country code"))));
+        outputStream.close();
     }
 }

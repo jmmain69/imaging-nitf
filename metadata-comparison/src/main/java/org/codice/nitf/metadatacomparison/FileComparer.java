@@ -736,12 +736,17 @@ public class FileComparer {
 
     private void generateGdalMetadata() {
         try {
+        	// validate file to stop command injection attacks.
+        	if (!(new File(filename).exists()))
+        	{
+        		throw new IOException(filename + " does not exist, or is unreadable.");
+        	}
             ProcessBuilder processBuilder = new ProcessBuilder("gdalinfo", "-nogcp", "-mdd", "xml:TRE", filename);
             processBuilder.environment().put("NITF_OPEN_UNDERLYING_DS", "NO");
             Process process = processBuilder.start();
             BufferedWriter out = null;
-            try {
-                FileWriter fstream = new FileWriter(filename + THEIR_OUTPUT_EXTENSION);
+            FileWriter fstream = new FileWriter(filename + THEIR_OUTPUT_EXTENSION);
+            try (FileWriter fstream = new FileWriter(filename + THEIR_OUTPUT_EXTENSION);){
                 out = new BufferedWriter(fstream);
             } catch (IOException e) {
                 LOGGER.error(e.getMessage(), e);

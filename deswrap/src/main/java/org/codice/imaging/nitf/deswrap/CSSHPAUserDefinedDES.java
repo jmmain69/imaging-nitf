@@ -121,7 +121,9 @@ class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
             } catch (IOException ex) {
                 LOG.warn("Could not generate CSSHPA.", ex);
             } finally {
-                tempFile.delete();
+            	if (tempFile != null) {
+            		tempFile.delete();
+            	}
                 try {
                     desData.close();
                 } catch (IOException ex) {
@@ -187,7 +189,11 @@ class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
                 shapeClassName = "MULTIPATCH";
                 break;
             default:
+            	shp.close();
                 throw new IOException(String.format("Error reading shapefile, unknown shapefile geometry class: %d", shapefileClass));
+        }
+        if (shp != null) {
+        	shp.close();
         }
         return padStringToLength(shapeClassName, CSSHPAConstants.SHAPE_CLASS_LENGTH);
     }

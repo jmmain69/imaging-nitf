@@ -30,6 +30,7 @@ import javax.imageio.stream.ImageInputStream;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.omg.CORBA.portable.InputStream;
 
 /**
  * Tests for CSSHPA creation.
@@ -151,12 +152,11 @@ public class CSSHPA_CreateTest {
         byte[] shx = new byte[(int) shxfile.length()];
         byte[] dbf = new byte[(int) dbffile.length()];
         Consumer<ImageInputStream> callbackConsumer = imageInputStream -> {
-            try {
+        	try (InputStream stream = getClass().getResourceAsStream(resourceName + ".shp");){
                 imageInputStream.seek(0L);
                 assertEquals(shp.length, imageInputStream.read(shp));
                 byte[] shpReferenceBytes = new byte[shp.length];
-                getClass().getResourceAsStream(resourceName + ".shp")
-                        .read(shpReferenceBytes);
+                stream.read(shpReferenceBytes);
                 Assert.assertArrayEquals(shpReferenceBytes, shp);
                 assertEquals(shx.length, imageInputStream.read(shx));
                 byte[] shxReferenceBytes = new byte[shx.length];

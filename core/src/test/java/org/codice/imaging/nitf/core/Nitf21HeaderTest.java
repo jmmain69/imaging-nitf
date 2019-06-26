@@ -581,6 +581,7 @@ public class Nitf21HeaderTest {
         assertEquals("JITCID", tre.getName());
         assertEquals("I_3228D, Checks multi spectral image of 6 bands, the image subheader tells the receiving system to display band 2 as red, band 4 as green, and band 6 as blue.                                          ", tre.getFieldValue("Info"));
         assertEquals(1, tre.getEntries().size());
+        is.close();
     }
 
     @Test

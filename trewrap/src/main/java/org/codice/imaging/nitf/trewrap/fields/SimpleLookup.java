@@ -17,6 +17,8 @@ package org.codice.imaging.nitf.trewrap.fields;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.xml.XMLConstants;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -61,7 +63,11 @@ public class SimpleLookup {
      */
     protected final void parseSimpleLookup(final InputStream xmlStream) {
         try {
-            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(xmlStream);
+        	// XXE proctection
+        	XMLInputFactory factory = XMLInputFactory.newInstance();
+        	factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        	factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+            XMLStreamReader reader = factory.createXMLStreamReader(xmlStream);          
             reader.next();
             mTre = reader.getAttributeValue("", "tre");
             mField = reader.getAttributeValue("", "field");

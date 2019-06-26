@@ -72,6 +72,7 @@ public class Jpeg2000Test {
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D targetGraphic = imgAGRB.createGraphics();
         renderer.render(mockImageSegment, targetGraphic);
+        fis.close()
     }
 
     @Test
@@ -101,6 +102,7 @@ public class Jpeg2000Test {
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D targetGraphic = imgAGRB.createGraphics();
         renderer.render(mockImageSegment, targetGraphic);
+        fis.close();
     }
 
 }

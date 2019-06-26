@@ -66,8 +66,14 @@ public class RasterProductFormatUtilities {
     */
     private void unmarshal(final InputStream inputStream) throws JAXBException {
         JAXBContext jc = JAXBContext.newInstance(Rpfs.class);
+        // XXE protection
+        XMLInputFactory xif = XMLInputFactory.newFactory();
+        xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+        xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        XMLStreamReader xsr = xif.createXMLStreamReader(new StreamSource("src/xxe/input.xml"));
+
         Unmarshaller u = jc.createUnmarshaller();
-        rpfs = (Rpfs) u.unmarshal(inputStream);
+        rpfs = (Rpfs) u.unmarshal(xsr);
     }
 
     /**

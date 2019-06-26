@@ -61,7 +61,13 @@ public class SensorLookup {
      */
     protected final void parseSensorLookup(final InputStream xmlStream) {
         try {
-            XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(xmlStream);
+        	// XXE prevention
+        	XMLInputFactory factory = XMLInputFactory.newInstance();
+        	factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        	factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false); 
+        	factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        	factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);        			
+            XMLStreamReader reader = factory.createXMLStreamReader(xmlStream);
             reader.next();
             mTre = reader.getAttributeValue("", "tre");
             mField = reader.getAttributeValue("", "field");

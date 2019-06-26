@@ -27,6 +27,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -102,7 +103,11 @@ public class TreParser {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
         dbf.setExpandEntityReferences(false);
-
+        // XXE prevention
+        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        dbf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        dbf.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        
         Document document;
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
