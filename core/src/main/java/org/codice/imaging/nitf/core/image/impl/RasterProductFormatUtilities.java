@@ -19,6 +19,10 @@ import java.io.InputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+
 import org.codice.imaging.nitf.core.common.NitfFormatException;
 import org.codice.imaging.nitf.core.schema.Rpfs;
 import org.slf4j.Logger;
@@ -70,10 +74,14 @@ public class RasterProductFormatUtilities {
         XMLInputFactory xif = XMLInputFactory.newFactory();
         xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
         xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-        XMLStreamReader xsr = xif.createXMLStreamReader(new StreamSource("src/xxe/input.xml"));
-
-        Unmarshaller u = jc.createUnmarshaller();
-        rpfs = (Rpfs) u.unmarshal(xsr);
+        try {
+            XMLStreamReader xsr = xif.createXMLStreamReader(inputStream);
+            Unmarshaller u = jc.createUnmarshaller();
+            rpfs = (Rpfs) u.unmarshal(xsr);
+        } catch (XMLStreamException e) {
+            LOG.error("Error setting up XMLStreamReader");
+            throw new JAXBException(e);
+        }
     }
 
     /**

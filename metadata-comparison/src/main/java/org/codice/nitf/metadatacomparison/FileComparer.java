@@ -745,7 +745,6 @@ public class FileComparer {
             processBuilder.environment().put("NITF_OPEN_UNDERLYING_DS", "NO");
             Process process = processBuilder.start();
             BufferedWriter out = null;
-            FileWriter fstream = new FileWriter(filename + THEIR_OUTPUT_EXTENSION);
             try (FileWriter fstream = new FileWriter(filename + THEIR_OUTPUT_EXTENSION);){
                 out = new BufferedWriter(fstream);
             } catch (IOException e) {

@@ -22,6 +22,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,9 @@ import org.slf4j.LoggerFactory;
  */
 public class SensorLookup {
     private final Map<String, Map<String, String>> sensorMap = new HashMap<>();
+
     private String mField;
+
     private String mTre;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensorLookup.class);
@@ -38,7 +41,7 @@ public class SensorLookup {
     /**
      * Construct new lookup.
      *
-     * @param xmlStream  stream of XML containing lookup entries.
+     * @param xmlStream stream of XML containing lookup entries.
      */
     public SensorLookup(final InputStream xmlStream) {
         parseSensorLookup(xmlStream);
@@ -52,7 +55,7 @@ public class SensorLookup {
 
     /**
      * Build lookup map from XML representation.
-     *
+     * <p>
      * The lookup can be manually configured, but typically most of the data will be read from an existing source. This
      * method provides reading from XML in a specific format that is generated from the main registry (see NITF
      * Registry Values Parser module). The XML is stored as resources in the TRE Wrapper module.
@@ -61,12 +64,10 @@ public class SensorLookup {
      */
     protected final void parseSensorLookup(final InputStream xmlStream) {
         try {
-        	// XXE prevention
-        	XMLInputFactory factory = XMLInputFactory.newInstance();
-        	factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        	factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false); 
-        	factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        	factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);        			
+            // XXE prevention
+            XMLInputFactory factory = XMLInputFactory.newInstance();
+            factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+            factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
             XMLStreamReader reader = factory.createXMLStreamReader(xmlStream);
             reader.next();
             mTre = reader.getAttributeValue("", "tre");
@@ -87,19 +88,21 @@ public class SensorLookup {
                 }
             }
         } catch (XMLStreamException ex) {
-            LOGGER.warn(String.format("Problem parsing XML for %s:%s. %s", mTre, mField, ex.toString()));
+            LOGGER.warn(String.format("Problem parsing XML for %s:%s. %s", mTre, mField,
+                    ex.toString()));
         }
     }
 
     /**
      * Get the description for this sensor / field combination with default fallback.
      *
-     * @param sensorId the sensor value
-     * @param field the value to look up
+     * @param sensorId           the sensor value
+     * @param field              the value to look up
      * @param defaultDescription default description to return if not found
      * @return the description corresponding to the field, or the default description if not found.
      */
-    public final String lookupDescription(final String sensorId, final String field, final String defaultDescription) {
+    public final String lookupDescription(final String sensorId, final String field,
+            final String defaultDescription) {
         String description = lookupDescription(sensorId, field);
         if (description == null) {
             return defaultDescription;
@@ -112,7 +115,7 @@ public class SensorLookup {
      * Get the description for this sensor / field combination.
      *
      * @param sensorId the sensor value
-     * @param field the value to look up
+     * @param field    the value to look up
      * @return the description corresponding to the field, or null if not found.
      */
     public final String lookupDescription(final String sensorId, final String field) {
@@ -134,14 +137,15 @@ public class SensorLookup {
 
     /**
      * Add a sensor / identifier lookup to this lookup.
-     *
+     * <p>
      * If the sensor / identifier combination already exists, this will replace the existing entry.
      *
-     * @param sensorId sensor identifier that will be looked up.
-     * @param fieldValue field value that will be looked up.
+     * @param sensorId        sensor identifier that will be looked up.
+     * @param fieldValue      field value that will be looked up.
      * @param textDescription description corresponding to the field value.
      */
-    protected final void registerNewLookup(final String sensorId, final String fieldValue, final String textDescription) {
+    protected final void registerNewLookup(final String sensorId, final String fieldValue,
+            final String textDescription) {
         if (!getKnownSensors().contains(sensorId)) {
             sensorMap.put(sensorId, new HashMap<>());
         }

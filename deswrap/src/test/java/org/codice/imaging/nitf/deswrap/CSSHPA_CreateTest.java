@@ -16,6 +16,7 @@ package org.codice.imaging.nitf.deswrap;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.function.Consumer;
 
 import org.codice.imaging.nitf.core.common.FileType;
@@ -30,7 +31,6 @@ import javax.imageio.stream.ImageInputStream;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.omg.CORBA.portable.InputStream;
 
 /**
  * Tests for CSSHPA creation.

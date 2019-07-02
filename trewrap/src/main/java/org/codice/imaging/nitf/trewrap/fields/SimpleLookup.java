@@ -18,11 +18,11 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.XMLConstants;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,9 @@ import org.slf4j.LoggerFactory;
 public class SimpleLookup {
 
     private final Map<String, String> fieldToDescriptionMap = new HashMap<>();
+
     private String mField;
+
     private String mTre;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleLookup.class);
@@ -45,7 +47,7 @@ public class SimpleLookup {
 
     /**
      * Build lookup map from XML representation.
-     *
+     * <p>
      * The lookup can be manually configured, but typically most of the data will be read from an existing source. This
      * method provides reading from XML in a specific format that is generated from the main registry (see NITF
      * Registry Values Parser module). The XML is stored as resources in the TRE Wrapper module.
@@ -63,11 +65,11 @@ public class SimpleLookup {
      */
     protected final void parseSimpleLookup(final InputStream xmlStream) {
         try {
-        	// XXE proctection
-        	XMLInputFactory factory = XMLInputFactory.newInstance();
-        	factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        	factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-            XMLStreamReader reader = factory.createXMLStreamReader(xmlStream);          
+            // XXE proctection
+            XMLInputFactory factory = XMLInputFactory.newInstance();
+            factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+            factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+            XMLStreamReader reader = factory.createXMLStreamReader(xmlStream);
             reader.next();
             mTre = reader.getAttributeValue("", "tre");
             mField = reader.getAttributeValue("", "field");
@@ -80,12 +82,14 @@ public class SimpleLookup {
                 }
             }
         } catch (XMLStreamException ex) {
-            LOGGER.warn(String.format("Problem parsing XML for %s:%s. %s", mTre, mField, ex.toString()));
+            LOGGER.warn(String.format("Problem parsing XML for %s:%s. %s", mTre, mField,
+                    ex.toString()));
         }
     }
 
     /**
      * Get the description for this field.
+     *
      * @param fieldValue the value to look up
      * @return the description corresponding to the field, or null if not found.
      */
@@ -95,10 +99,10 @@ public class SimpleLookup {
 
     /**
      * Add a identifier lookup to this lookup.
-     *
+     * <p>
      * If the identifier already exists, this will replace the existing entry.
      *
-     * @param fieldValue field value that will be look up.
+     * @param fieldValue      field value that will be look up.
      * @param textDescription description corresponding to the field value.
      */
     protected final void registerNewLookup(final String fieldValue, final String textDescription) {

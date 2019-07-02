@@ -19,6 +19,7 @@
 package org.codice.imaging.nitf.render;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
+import static junit.framework.Assert.fail;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -60,19 +61,22 @@ public class Jpeg2000Test {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(parseHexBinary("00000044000400000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000"));
-        FileInputStream fis = new FileInputStream(new File(getClass().getResource("/file6.jp2").toURI()));
-        byte[] lastBlock = new byte[fis.available()];
-        fis.read(lastBlock);
-        baos.write(lastBlock, 0, lastBlock.length);
-        ImageInputStream iis = new MemoryCacheImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
-        Mockito.when(mockImageSegment.getData()).thenReturn(iis);
+        try (FileInputStream fis = new FileInputStream(new File(getClass().getResource("/file6.jp2").toURI()));) {
+            byte[] lastBlock = new byte[fis.available()];
+            fis.read(lastBlock);
+            baos.write(lastBlock, 0, lastBlock.length);
+            ImageInputStream iis = new MemoryCacheImageInputStream(new ByteArrayInputStream(baos.toByteArray()));
+            Mockito.when(mockImageSegment.getData()).thenReturn(iis);
 
-        BufferedImage imgAGRB = new BufferedImage((int) (mockImageSegment.getNumberOfBlocksPerRow() * mockImageSegment.getNumberOfPixelsPerBlockHorizontal()),
-                (int) (mockImageSegment.getNumberOfBlocksPerColumn() * mockImageSegment.getNumberOfPixelsPerBlockVertical()),
-                BufferedImage.TYPE_INT_ARGB);
-        Graphics2D targetGraphic = imgAGRB.createGraphics();
-        renderer.render(mockImageSegment, targetGraphic);
-        fis.close()
+            BufferedImage imgAGRB = new BufferedImage(
+                    (int) (mockImageSegment.getNumberOfBlocksPerRow() * mockImageSegment.getNumberOfPixelsPerBlockHorizontal()),
+                    (int) (mockImageSegment.getNumberOfBlocksPerColumn() * mockImageSegment.getNumberOfPixelsPerBlockVertical()),
+                    BufferedImage.TYPE_INT_ARGB);
+            Graphics2D targetGraphic = imgAGRB.createGraphics();
+            renderer.render(mockImageSegment, targetGraphic);
+        } catch (IOException e) {
+            fail("IOException " + e.getMessage());
+        }
     }
 
     @Test
@@ -90,7 +94,7 @@ public class Jpeg2000Test {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(parseHexBinary("00000044000400000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000"));
-        FileInputStream fis = new FileInputStream(new File(getClass().getResource("/file6.jp2").toURI()));
+        try (FileInputStream fis = new FileInputStream(new File(getClass().getResource("/file6.jp2").toURI()));) {
         byte[] lastBlock = new byte[fis.available()];
         fis.read(lastBlock);
         baos.write(lastBlock, 0, lastBlock.length);
@@ -102,7 +106,9 @@ public class Jpeg2000Test {
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D targetGraphic = imgAGRB.createGraphics();
         renderer.render(mockImageSegment, targetGraphic);
-        fis.close();
+        } catch (IOException e) {
+            fail("IOException " + e.getMessage());
+        }
     }
 
 }

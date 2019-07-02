@@ -34,15 +34,19 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of CSSHPA DES.
- *
+ * <p>
  * This is defined in STDI-0002-2 Appendix D, as modified by RFC-080.
  */
 class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
 
     private final File mSHP;
+
     private final File mSHX;
+
     private final File mDBF;
+
     private final String mShapeUse;
+
     private final String mCloudCoverSensor;
 
     private static final int FILE_BUF_SIZE = 8192;
@@ -57,7 +61,8 @@ class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
         mCloudCoverSensor = "";
     }
 
-    CSSHPAUserDefinedDES(final String shapeUse, final File shpFile, final File shxFile, final File dbfFile) {
+    CSSHPAUserDefinedDES(final String shapeUse, final File shpFile, final File shxFile,
+            final File dbfFile) {
         mSHP = shpFile;
         mSHX = shxFile;
         mDBF = dbfFile;
@@ -65,7 +70,8 @@ class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
         mCloudCoverSensor = "PAN, MS";
     }
 
-    CSSHPAUserDefinedDES(final String shapeUse, final String ccSource, final File shpFile, final File shxFile, final File dbfFile) {
+    CSSHPAUserDefinedDES(final String shapeUse, final String ccSource, final File shpFile,
+            final File shxFile, final File dbfFile) {
         mSHP = shpFile;
         mSHX = shxFile;
         mDBF = dbfFile;
@@ -73,41 +79,40 @@ class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
         mCloudCoverSensor = ccSource;
     }
 
-    @Override
-    public String getTypeIdentifier() {
+    @Override public String getTypeIdentifier() {
         return "CSSHPA DES";
     }
 
-    @Override
-    public int getVersion() {
+    @Override public int getVersion() {
         return 1;
     }
 
-    @Override
-    public String getUserDefinedSubheader() throws NitfFormatException {
+    @Override public String getUserDefinedSubheader() throws NitfFormatException {
         try {
             StringBuilder subheaderData = new StringBuilder();
             subheaderData.append(padStringToLength(mShapeUse, CSSHPAConstants.SHAPE_USE_LENGTH));
             subheaderData.append(getShapefileClassName(mSHP));
             if (CLOUD_SHAPES_USE.equals(mShapeUse)) {
-                subheaderData.append(padStringToLength(mCloudCoverSensor, CSSHPAConstants.CC_SOURCE_LENGTH));
+                subheaderData.append(padStringToLength(mCloudCoverSensor,
+                        CSSHPAConstants.CC_SOURCE_LENGTH));
             }
             subheaderData.append("SHP");
             subheaderData.append(padNumberToLength(0, CSSHPAConstants.FILEOFFSET_LENGTH));
             long incrementalLength = mSHP.length();
             subheaderData.append("SHX");
-            subheaderData.append(padNumberToLength(incrementalLength, CSSHPAConstants.FILEOFFSET_LENGTH));
+            subheaderData.append(padNumberToLength(incrementalLength,
+                    CSSHPAConstants.FILEOFFSET_LENGTH));
             incrementalLength += mSHX.length();
             subheaderData.append("DBF");
-            subheaderData.append(padNumberToLength(incrementalLength, CSSHPAConstants.FILEOFFSET_LENGTH));
+            subheaderData.append(padNumberToLength(incrementalLength,
+                    CSSHPAConstants.FILEOFFSET_LENGTH));
             return subheaderData.toString();
         } catch (IOException ex) {
             throw new NitfFormatException("Could not generate CSSHPA: " + ex.getMessage());
         }
     }
 
-    @Override
-    public Consumer<Consumer<ImageInputStream>> getUserDataConsumer() {
+    @Override public Consumer<Consumer<ImageInputStream>> getUserDataConsumer() {
         return callbackConsumer -> {
             File tempFile = null;
             FileImageOutputStream desData = null;
@@ -121,9 +126,9 @@ class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
             } catch (IOException ex) {
                 LOG.warn("Could not generate CSSHPA.", ex);
             } finally {
-            	if (tempFile != null) {
-            		tempFile.delete();
-            	}
+                if (tempFile != null) {
+                    tempFile.delete();
+                }
                 try {
                     desData.close();
                 } catch (IOException ex) {
@@ -133,72 +138,75 @@ class CSSHPAUserDefinedDES implements UserDefinedDataExtensionSegment {
         };
     }
 
-    @Override
-    public long getLength() {
+    @Override public long getLength() {
         return mSHP.length() + mSHX.length() + mDBF.length();
     }
 
-    private static String getShapefileClassName(final File shpFile) throws IOException, NitfFormatException {
+    private static String getShapefileClassName(final File shpFile)
+            throws IOException, NitfFormatException {
         RandomAccessFile shp = new RandomAccessFile(shpFile, "r");
         shp.seek(CSSHPAConstants.SHAPE_TYPE_OFFSET);
         int shapefileClass = Integer.reverseBytes(shp.readInt());
         String shapeClassName;
         switch (shapefileClass) {
-            case CSSHPAConstants.SHAPE_CLASS_NULL:
-                shapeClassName = "NULL SHAPE";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POINT:
-                shapeClassName = "POINT";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POLYLINE:
-                shapeClassName = "POLYLINE";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POLYGON:
-                shapeClassName = "POLYGON";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_MULTIPOINT:
-                shapeClassName = "MULTIPOINT";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POINTZ:
-                shapeClassName = "POINTZ";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POLYLINEZ:
-                shapeClassName = "POLYLINEZ";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POLYGONZ:
-                shapeClassName = "POLYGONZ";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_MULTIPOINTZ:
-                // The missing I is intentional
-                shapeClassName = "MULTPOINTZ";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POINTM:
-                shapeClassName = "POINTM";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POLYLINEM:
-                shapeClassName = "POLYLINEM";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_POLYGONM:
-                shapeClassName = "POLYGONM";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_MULTIPOINTM:
-                // The missing I is intentional
-                shapeClassName = "MULTPOINTM";
-                break;
-            case CSSHPAConstants.SHAPE_CLASS_MULTIPATCH:
-                shapeClassName = "MULTIPATCH";
-                break;
-            default:
-            	shp.close();
-                throw new IOException(String.format("Error reading shapefile, unknown shapefile geometry class: %d", shapefileClass));
+        case CSSHPAConstants.SHAPE_CLASS_NULL:
+            shapeClassName = "NULL SHAPE";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POINT:
+            shapeClassName = "POINT";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POLYLINE:
+            shapeClassName = "POLYLINE";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POLYGON:
+            shapeClassName = "POLYGON";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_MULTIPOINT:
+            shapeClassName = "MULTIPOINT";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POINTZ:
+            shapeClassName = "POINTZ";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POLYLINEZ:
+            shapeClassName = "POLYLINEZ";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POLYGONZ:
+            shapeClassName = "POLYGONZ";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_MULTIPOINTZ:
+            // The missing I is intentional
+            shapeClassName = "MULTPOINTZ";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POINTM:
+            shapeClassName = "POINTM";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POLYLINEM:
+            shapeClassName = "POLYLINEM";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_POLYGONM:
+            shapeClassName = "POLYGONM";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_MULTIPOINTM:
+            // The missing I is intentional
+            shapeClassName = "MULTPOINTM";
+            break;
+        case CSSHPAConstants.SHAPE_CLASS_MULTIPATCH:
+            shapeClassName = "MULTIPATCH";
+            break;
+        default:
+            shp.close();
+            throw new IOException(
+                    String.format("Error reading shapefile, unknown shapefile geometry class: %d",
+                            shapefileClass));
         }
         if (shp != null) {
-        	shp.close();
+            shp.close();
         }
         return padStringToLength(shapeClassName, CSSHPAConstants.SHAPE_CLASS_LENGTH);
     }
 
-    private static void writeOutFile(final FileImageOutputStream desData, final File shpFile) throws IOException {
+    private static void writeOutFile(final FileImageOutputStream desData, final File shpFile)
+            throws IOException {
         try (InputStream is = new FileInputStream(shpFile)) {
             byte[] tempBuf = new byte[FILE_BUF_SIZE];
             int numBytesRead;

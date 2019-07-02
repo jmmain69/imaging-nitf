@@ -14,11 +14,13 @@
  */
 package org.codice.imaging.nitf.trewrap.fields;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
-import org.omg.CORBA.portable.InputStream;
 
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -37,9 +39,11 @@ public class SimpleLookupTest {
     @Test
     public void checkBadResourcePath() {
         assertThat(LOGGER.getLoggingEvents().isEmpty(), is(true));
-        InputStream stream = SimpleLookup.class.getResourceAsStream("/bad path");
-        SimpleLookup lookup = new SimpleLookup(stream);
-        assertThat(LOGGER.getLoggingEvents(), is(Arrays.asList(LoggingEvent.warn("Problem parsing XML for null:null. javax.xml.stream.XMLStreamException: java.net.MalformedURLException"))));
-        stream.close();
+        try (InputStream stream = SimpleLookup.class.getResourceAsStream("/bad path");) {
+            SimpleLookup lookup = new SimpleLookup(stream);
+            assertThat(LOGGER.getLoggingEvents(), is(Arrays.asList(LoggingEvent.warn("Problem parsing XML for null:null. javax.xml.stream.XMLStreamException: java.net.MalformedURLException"))));
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
     }
 }

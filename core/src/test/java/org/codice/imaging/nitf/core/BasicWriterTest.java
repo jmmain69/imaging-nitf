@@ -29,8 +29,7 @@ import org.codice.imaging.nitf.core.common.impl.NitfInputStreamReader;
 import org.codice.imaging.nitf.core.common.NitfReader;
 import org.codice.imaging.nitf.core.header.impl.NitfParser;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import org.codice.imaging.nitf.core.image.ImageSegment;
 import org.codice.imaging.nitf.core.image.TargetId;
@@ -122,28 +121,33 @@ public class BasicWriterTest extends AbstractWriterTest {
 
     @Test
     public void checkBadStreamWriter() throws NitfFormatException, FileNotFoundException {
-        OutputStream outputStream = new FileOutputStream("checkBadStreamWriter.ntf");
-        NitfReader reader = new NitfInputStreamReader(new BufferedInputStream(getInputStream("/WithBE.ntf")));
-        SlottedParseStrategy parseStrategy = new SlottedParseStrategy(SlottedParseStrategy.ALL_SEGMENT_DATA);
-        HeapStrategyConfiguration heapStrategyConfiguration = new HeapStrategyConfiguration(length -> length > ABOUT_100K);
-        HeapStrategy<ImageInputStream> imageDataStrategy = new ConfigurableHeapStrategy<>(heapStrategyConfiguration,
-                file -> new FileImageInputStream(file), is -> new MemoryCacheImageInputStream(is));
-        parseStrategy.setImageHeapStrategy(imageDataStrategy);
-        NitfParser.parse(reader, parseStrategy);
+        try (OutputStream outputStream = new FileOutputStream("checkBadStreamWriter.ntf");) {
+            NitfReader reader = new NitfInputStreamReader(new BufferedInputStream(getInputStream("/WithBE.ntf")));
+            SlottedParseStrategy parseStrategy = new SlottedParseStrategy(SlottedParseStrategy.ALL_SEGMENT_DATA);
+            HeapStrategyConfiguration heapStrategyConfiguration = new HeapStrategyConfiguration(
+                    length -> length > ABOUT_100K);
+            HeapStrategy<ImageInputStream> imageDataStrategy = new ConfigurableHeapStrategy<>(
+                    heapStrategyConfiguration, file -> new FileImageInputStream(file), is -> new MemoryCacheImageInputStream(is));
+            parseStrategy.setImageHeapStrategy(imageDataStrategy);
+            NitfParser.parse(reader, parseStrategy);
 
-        // Introduce deliberate issue
-        ImageSegment imageSegment = parseStrategy.getDataSource().getImageSegments().get(0);
-        TargetId originalTargetId = imageSegment.getImageTargetId();
-        TargetIdImpl newTargetId = new TargetIdImpl();
-        newTargetId.setBasicEncyclopediaNumber(originalTargetId.getBasicEncyclopediaNumber());
-        newTargetId.setOSuffix(originalTargetId.getOSuffix());
-        newTargetId.setCountryCode(null);
-        imageSegment.setImageTargetId(newTargetId);
+            // Introduce deliberate issue
+            ImageSegment imageSegment = parseStrategy.getDataSource().getImageSegments().get(0);
+            TargetId originalTargetId = imageSegment.getImageTargetId();
+            TargetIdImpl newTargetId = new TargetIdImpl();
+            newTargetId.setBasicEncyclopediaNumber(originalTargetId.getBasicEncyclopediaNumber());
+            newTargetId.setOSuffix(originalTargetId.getOSuffix());
+            newTargetId.setCountryCode(null);
+            imageSegment.setImageTargetId(newTargetId);
 
-        NitfWriter writer = new NitfOutputStreamWriter(parseStrategy.getDataSource(), outputStream);
-        assertEquals(0, LOGGER.getLoggingEvents().size());
-        writer.write();
-        assertThat(LOGGER.getLoggingEvents(), is(Arrays.asList(LoggingEvent.error("Could not write", "Cannot generate string target identifier with null country code"))));
-        outputStream.close();
+            NitfWriter writer = new NitfOutputStreamWriter(parseStrategy.getDataSource(),
+                    outputStream);
+            assertEquals(0, LOGGER.getLoggingEvents().size());
+            writer.write();
+            assertThat(LOGGER.getLoggingEvents(), is(Arrays.asList(LoggingEvent.error("Could not write",
+                    "Cannot generate string target identifier with null country code"))));
+        } catch (IOException e) {
+            fail("IOException "  + e.getMessage());
+        }
     }
 }
